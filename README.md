@@ -83,11 +83,22 @@ cd Packages/SKeyEngine && swift test   # test engine Telex
 
 Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt với bản release `com.huyly.skey`, nên quyền của hai bản không đè lên nhau. Không có `Local.xcconfig` thì bản dev ký ad-hoc và phải cấp lại quyền sau mỗi lần build.
 
-**Phát hành:**
+**Đóng góp:** nhánh `master` được bảo vệ, mọi thay đổi đi qua pull request. Workflow **CI** (`.github/workflows/ci.yml`) chạy test engine và build app cho mỗi PR; PR chỉ merge được khi CI đạt.
+
+**Phát hành:** bản chính thức do GitHub Actions build, không build trên máy cá nhân.
+1. Nâng `MARKETING_VERSION` (và `CURRENT_PROJECT_VERSION`) trong `project.yml`, merge vào `master`.
+2. Đẩy tag trùng phiên bản:
+   ```bash
+   git tag v0.1.2 && git push origin v0.1.2
+   ```
+3. Workflow **Release** (`.github/workflows/release.yml`) chạy `scripts/release.sh` trên máy macOS của GitHub: test, build universal (arm64 + x86_64), ký ad-hoc, tạo DMG, zip và checksum, **chứng thực nguồn gốc** (build attestation), rồi tạo GitHub Release với nội dung từ `.github/release-notes.md`.
+
+Người dùng kiểm tra file tải về được build từ repo này bằng:
 ```bash
-./scripts/release.sh
+gh attestation verify SKey-0.1.2.dmg -R SLyHuy/SKey
 ```
-Script chạy test, build universal (arm64 + x86_64), ký ad-hoc, rồi tạo `dist/SKey-<version>.dmg`, `dist/SKey-<version>.zip` và file checksum `SKey-<version>.sha256`. Icon app được vẽ bằng code: sửa `scripts/make-icon.swift` rồi chạy `swift scripts/make-icon.swift`. Phiên bản đặt ở `MARKETING_VERSION` trong `project.yml`.
+
+Muốn build thử trên máy thì chạy `./scripts/release.sh` (kết quả nằm trong `dist/`). Icon app được vẽ bằng code: sửa `scripts/make-icon.swift` rồi chạy `swift scripts/make-icon.swift`.
 
 ## Cấu trúc
 
