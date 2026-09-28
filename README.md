@@ -93,20 +93,22 @@ Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt
   ```
   rồi thêm key đó trên GitHub ở dạng **Signing Key** (Settings → SSH and GPG keys).
 
-**Phát hành:** bản chính thức do GitHub Actions build, không build trên máy cá nhân.
-1. Nâng `MARKETING_VERSION` (và `CURRENT_PROJECT_VERSION`) trong `project.yml`, merge vào `master`.
-2. Đẩy tag trùng phiên bản:
-   ```bash
-   git tag v0.1.2 && git push origin v0.1.2
-   ```
-3. Workflow **Release** (`.github/workflows/release.yml`) chạy `scripts/release.sh` trên máy macOS của GitHub: test, build universal (arm64 + x86_64), ký ad-hoc, tạo DMG, zip và checksum, **chứng thực nguồn gốc** (build attestation), rồi tạo GitHub Release với nội dung từ `.github/release-notes.md`.
+**Phát hành:** bản chính thức do GitHub Actions build, không build trên máy cá nhân, và **số phiên bản lấy từ tag git** (không ghi trong `project.yml`).
+1. Vào **Actions → Release → Run workflow** (nhánh `master`), chọn phần cần nâng theo [Semantic Versioning](https://semver.org): `patch` (0.1.2 → 0.1.3, sửa lỗi), `minor` (0.1.2 → 0.2.0, tính năng mới), `major` (0.1.2 → 1.0.0, thay đổi lớn).
+2. Workflow **Release** (`.github/workflows/release.yml`) tính số phiên bản mới từ tag gần nhất, chạy `scripts/release.sh` trên máy macOS của GitHub (test, build universal arm64 + x86_64, ký ad-hoc, DMG, zip, checksum), **chứng thực nguồn gốc** (build attestation), rồi tạo tag và GitHub Release với nội dung từ `.github/release-notes.md`.
+
+Hoặc từ dòng lệnh:
+```bash
+gh workflow run release.yml -R SLyHuy/SKey -f bump=patch
+```
+Đẩy tag thủ công (`git tag v1.2.3 && git push origin v1.2.3`) cũng kích hoạt workflow.
 
 Người dùng kiểm tra file tải về được build từ repo này bằng:
 ```bash
 gh attestation verify SKey-0.1.2.dmg -R SLyHuy/SKey
 ```
 
-Muốn build thử trên máy thì chạy `./scripts/release.sh` (kết quả nằm trong `dist/`). Icon app được vẽ bằng code: sửa `scripts/make-icon.swift` rồi chạy `swift scripts/make-icon.swift`.
+Muốn build thử trên máy thì chạy `./scripts/release.sh`: bản build mang số phiên bản của tag gần nhất kèm `-dev` (ví dụ `0.1.2-dev`), kết quả nằm trong `dist/`. Icon app được vẽ bằng code: sửa `scripts/make-icon.swift` rồi chạy `swift scripts/make-icon.swift`.
 
 ## Cấu trúc
 
