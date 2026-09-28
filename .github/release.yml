@@ -1,4 +1,4 @@
-# Groups the merged pull requests listed in each release's "Có gì thay đổi" section.
+# Groups the merged pull requests listed in each release's "What's Changed" section.
 # The section comes from GitHub's generated release notes (see .github/workflows/release.yml);
 # a pull request lands in the first category whose label it carries.
 changelog:
@@ -9,18 +9,18 @@ changelog:
       - dependabot
       - dependabot[bot]
   categories:
-    - title: ✨ Tính năng mới
+    - title: ✨ New features
       labels:
         - enhancement
-    - title: 🐛 Sửa lỗi
+    - title: 🐛 Bug fixes
       labels:
         - bug
-    - title: 🔒 Bảo mật
+    - title: 🔒 Security
       labels:
         - security
-    - title: 📝 Tài liệu
+    - title: 📝 Documentation
       labels:
         - documentation
-    - title: 🛠 Khác
+    - title: 🛠 Other
       labels:
         - "*"

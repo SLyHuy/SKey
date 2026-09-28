@@ -22,7 +22,7 @@ on:
         options: [patch, minor, major]
         default: patch
       highlights:
-        description: Điểm nổi bật (tuỳ chọn), một câu cho người dùng, hiện ở đầu ghi chú release
+        description: Highlights (optional), a sentence for users shown at the top of the release notes
         type: string
         required: false
   push:
@@ -109,13 +109,10 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
             -f tag_name="v$VERSION" -f target_commitish="$GITHUB_SHA" \
             -f configuration_file_path=.github/release.yml --jq .body \
-            | sed -e "s/^## What's Changed/## Có gì thay đổi/" \
-                  -e "s/^## New Contributors/## Người đóng góp mới/" \
-                  -e "s/^\*\*Full Changelog\*\*/**Toàn bộ thay đổi**/" \
             > "$RUNNER_TEMP/changes.md"
           {
             if [ -n "$HIGHLIGHTS" ]; then
-              printf '## Điểm nổi bật\n%s\n\n' "$HIGHLIGHTS"
+              printf '## Highlights\n%s\n\n' "$HIGHLIGHTS"
             fi
             cat "$RUNNER_TEMP/changes.md"
             printf '\n\n'

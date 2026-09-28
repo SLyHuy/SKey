@@ -100,13 +100,13 @@ Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt
 
 Hoặc từ dòng lệnh:
 ```bash
-gh workflow run release.yml -R SLyHuy/SKey -f bump=patch -f highlights="Sửa lỗi gõ ươ khi gõ nhanh"
+gh workflow run release.yml -R SLyHuy/SKey -f bump=patch -f highlights="Fix fast typing of ươ"
 ```
 
-**Ghi chú release** được ghép tự động từ ba phần:
-- **Điểm nổi bật**: câu bạn gõ vào ô *highlights* khi bấm Run workflow (tuỳ chọn).
-- **Có gì thay đổi**: danh sách PR đã merge kể từ bản trước, nhóm theo nhãn của PR (`.github/release.yml`): `enhancement` → Tính năng mới, `bug` → Sửa lỗi, `security` → Bảo mật, `documentation` → Tài liệu, còn lại → Khác. PR có nhãn `skip-changelog` và PR của Dependabot không được liệt kê. Vì vậy hãy đặt tiêu đề PR rõ ràng và gắn nhãn trước khi merge.
-- **Cài đặt và kiểm tra file**: từ `.github/release-notes.md`.
+**Ghi chú release** (tiếng Anh) được ghép tự động từ ba phần:
+- **Highlights**: câu bạn gõ vào ô *highlights* khi bấm Run workflow (tuỳ chọn).
+- **What's Changed**: danh sách PR đã merge kể từ bản trước, nhóm theo nhãn của PR (`.github/release.yml`): `enhancement` → New features, `bug` → Bug fixes, `security` → Security, `documentation` → Documentation, còn lại → Other. PR có nhãn `skip-changelog` và PR của Dependabot không được liệt kê. Vì vậy hãy đặt tiêu đề PR bằng tiếng Anh, rõ ràng, và gắn nhãn trước khi merge.
+- **Install / Verify the download**: từ `.github/release-notes.md`.
 
 Sau khi phát hành vẫn có thể sửa ghi chú trực tiếp trên trang Release của GitHub.
 Đẩy tag thủ công (`git tag v1.2.3 && git push origin v1.2.3`) cũng kích hoạt workflow.
