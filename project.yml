@@ -6,8 +6,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.2"
-    CURRENT_PROJECT_VERSION: "3"
+    # The real version comes from the release tag: scripts/release.sh passes it to
+    # xcodebuild. These defaults only show up in builds made straight from Xcode.
+    MARKETING_VERSION: "0.0.0"
+    CURRENT_PROJECT_VERSION: "0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
 packages:
   SKeyEngine:

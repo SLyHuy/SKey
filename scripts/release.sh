@@ -3,23 +3,33 @@
 #   dist/SKey-<version>.dmg     (app + Applications shortcut + install notes)
 #   dist/SKey-<version>.zip
 #   dist/SKey-<version>.sha256  (checksums of both)
+#
+# The version is VERSION=1.2.3 when set (the release workflow sets it from the tag it is
+# about to create); otherwise the latest v* tag plus "-dev", for local test builds. The
+# build number is the commit count, so it always grows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+LATEST_TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo v0.0.0)
+VERSION="${VERSION:-${LATEST_TAG#v}-dev}"
+BUILD=$(git rev-list --count HEAD)
 
 command -v xcodegen >/dev/null || { echo "Cần cài XcodeGen: brew install xcodegen" >&2; exit 1; }
 
 echo "==> Chạy test engine"
 (cd Packages/SKeyEngine && swift test --quiet)
 
-echo "==> Build Release (universal, ký ad-hoc)"
+echo "==> Build Release $VERSION (build $BUILD, universal, ký ad-hoc)"
 xcodegen generate --quiet
 rm -rf build/DerivedData/Build/Products/Release dist
 xcodebuild -project SKey.xcodeproj -scheme SKey -configuration Release \
-  -destination 'generic/platform=macOS' -derivedDataPath build/DerivedData build -quiet
+  -destination 'generic/platform=macOS' -derivedDataPath build/DerivedData \
+  MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD" build -quiet
 
 APP="build/DerivedData/Build/Products/Release/SKey.app"
 codesign --verify --strict "$APP"
-VERSION=$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/Info.plist")
+BUILT=$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/Info.plist")
+[ "$BUILT" = "$VERSION" ] || { echo "App reports version $BUILT, expected $VERSION" >&2; exit 1; }
 
 mkdir -p dist
 ditto -c -k --keepParent "$APP" "dist/SKey-$VERSION.zip"
