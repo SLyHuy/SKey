@@ -75,12 +75,13 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
           xcodebuild -version
 
+      - name: Install XcodeGen (pinned, checksum verified)
+        run: ./scripts/install-xcodegen.sh
+
       - name: Test, build and package
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          brew install xcodegen
-          ./scripts/release.sh
+        run: ./scripts/release.sh
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
