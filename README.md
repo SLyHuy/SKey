@@ -10,7 +10,7 @@ Bộ gõ **Telex** tối giản cho macOS. Làm đúng một việc: gõ tiếng
 
 SKey được phát hành **không kèm chứng chỉ Apple** (chữ ký ad-hoc), nên lần đầu cần vài bước:
 
-1. Tải `SKey-x.y.z.zip`, kiểm tra checksum nếu muốn: `shasum -a 256 SKey-x.y.z.zip` (so với file `.sha256`).
+1. Tải `SKey-x.y.z.zip` tại [trang Releases](https://github.com/SLyHuy/SKey/releases/latest), kiểm tra checksum nếu muốn: `shasum -a 256 SKey-x.y.z.zip` (so với file `.sha256`).
 2. Giải nén, kéo **SKey.app** vào **Applications**.
 3. Mở SKey. macOS sẽ chặn vì "không xác minh được nhà phát triển":
    vào **System Settings → Privacy & Security**, kéo xuống, bấm **Open Anyway**.
@@ -88,3 +88,11 @@ App/
   KeyRouter.swift      Phân loại phím: chữ, ngắt từ, backspace, di chuyển con trỏ, phím tắt
   AppController.swift  Quyền truy cập, theo dõi app và input source, cửa sổ
 ```
+
+## Giấy phép
+
+Copyright © 2026 Huy Ly
+
+SKey là phần mềm tự do: bạn có thể phân phối lại và/hoặc sửa đổi theo các điều khoản của **GNU General Public License phiên bản 3** (GPL-3.0) do Free Software Foundation công bố. Bất kỳ bản sửa đổi nào được phát hành cũng phải công khai mã nguồn theo cùng giấy phép, nhờ vậy người dùng luôn kiểm tra được một bộ gõ đang đọc phím của họ.
+
+SKey được phân phối với hy vọng là hữu ích nhưng **không kèm bất kỳ bảo đảm nào**. Xem toàn văn giấy phép trong file [LICENSE](LICENSE).

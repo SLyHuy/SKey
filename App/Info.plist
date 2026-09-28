@@ -27,6 +27,6 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>© 2026 Huy Ly. Bộ gõ Telex tối giản cho lập trình viên.</string>
+	<string>© 2026 Huy Ly. GPL-3.0. Bộ gõ Telex tối giản cho lập trình viên.</string>
 </dict>
 </plist>

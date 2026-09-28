@@ -39,7 +39,7 @@ struct AboutView: View {
 
             VStack(spacing: 4) {
                 Text("Chuyển Vi/En: \(hotkey.title)")
-                Text("© 2026 Huy Ly")
+                Text("© 2026 Huy Ly · Giấy phép GPL-3.0")
             }
             .font(.callout)
             .foregroundStyle(.secondary)
