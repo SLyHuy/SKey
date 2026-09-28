@@ -1,17 +1,34 @@
-/// Tracks the text right before the caret across words, so a finished word can still be
-/// edited: type "tân ", Backspace, then "j" → "tận". When the caret moved somewhere
-/// unknown (click, arrows), the first mark key asks `context` for the text before the caret.
+/// Tracks the text right before the caret, so a finished word can still be edited: type
+/// "tân ", Backspace, then "j" → "tận". When the caret moved somewhere unknown (click,
+/// arrows), the first mark key asks `context` for the text before the caret.
+///
+/// Privacy by design, it keeps and reads as little as possible:
+/// - at most `memoryLength` (21) characters before the current word, in memory only,
+///   dropped whenever the caret moves;
+/// - at most `contextLength` (14) characters read before the caret, once, not kept beyond
+///   the word being edited.
+/// Only a word of up to `maxWordLength` (7) letters is ever taken over: no Vietnamese word
+/// is longer, so longer ones are English and have nothing to fix.
 ///
 /// Invariant: `before` + `engine.text` is exactly what sits before the caret, as far as the
 /// session knows. Anything that may break that (cursor moves) calls `cursorMoved()`.
 public struct TypingSession: Sendable {
     public var engine: TelexEngine
 
-    /// Text before the current word (bounded), valid while `contextKnown`.
+    /// Longest Vietnamese word, in letters ("nghiêng", "nghiệp").
+    public static let maxWordLength = 7
+    /// Characters read before the caret: a 7-letter word plus room for brackets, quotes
+    /// and spaces around it.
+    public static let contextLength = 14
+    /// Characters remembered for Backspace: the context plus one more word.
+    public static let memoryLength = contextLength + maxWordLength
+
+    /// Text before the current word, valid while `contextKnown`.
     private var before = ""
     private var contextKnown = false
-
-    private static let beforeLimit = 64
+    /// Whether `before` starts at a word boundary: true where typing began, false once the
+    /// start was trimmed from memory (the first letters of a word may be missing).
+    private var beforeStartKnown = false
 
     /// Text before the caret and whether a letter follows the caret.
     public typealias Context = (before: String, letterAfter: Bool)
@@ -26,8 +43,9 @@ public struct TypingSession: Sendable {
         if engine.isEmpty, !contextKnown {
             contextKnown = true
             before = ""
+            beforeStartKnown = true  // typing starts a word here
             if Self.isMarkKey(ch), let c = context(), !c.letterAfter {
-                adopt(c.before)
+                adopt(String(c.before.suffix(Self.contextLength)))
             }
         }
         return engine.process(ch)
@@ -38,7 +56,7 @@ public struct TypingSession: Sendable {
         let shown = engine.text
         let edit = engine.finalize()
         let committed = edit.map { String(shown.dropLast($0.deleteCount)) + $0.insert } ?? shown
-        before = String((before + committed + String(ch)).suffix(Self.beforeLimit))
+        remember(before + committed + String(ch))
         contextKnown = true
         return edit
     }
@@ -51,29 +69,49 @@ public struct TypingSession: Sendable {
             return
         }
         guard !before.isEmpty else {
-            contextKnown = false
+            forget()
             return
         }
         before.removeLast()
         let word = TelexEngine.trailingWord(of: before)
-        if !word.isEmpty {
+        guard !word.isEmpty else {
+            if before.isEmpty { forget() }  // past everything we know
+            return
+        }
+        let wholeWordKnown = word.count < before.count || beforeStartKnown
+        if word.count <= Self.maxWordLength, wholeWordKnown {
             before.removeLast(word.count)
             engine.load(word)
-        } else if before.isEmpty {
-            contextKnown = false  // past everything we know; ask again if needed
+        } else {
+            // Too long to be Vietnamese, or its start was trimmed from memory: stop guessing.
+            // The next mark key reads the real text around the caret instead.
+            forget()
         }
     }
 
     /// Click, arrows, app switch, shortcut, Enter…: the text before the caret is unknown.
     public mutating func cursorMoved() {
         engine.reset()
+        forget()
+    }
+
+    private mutating func forget() {
         before = ""
         contextKnown = false
+        beforeStartKnown = false
+    }
+
+    private mutating func remember(_ text: String) {
+        before = String(text.suffix(Self.memoryLength))
+        if text.count > Self.memoryLength { beforeStartKnown = false }
     }
 
     private mutating func adopt(_ text: String) {
         let word = TelexEngine.trailingWord(of: text)
-        before = String(text.dropLast(word.count).suffix(Self.beforeLimit))
+        guard word.count <= Self.maxWordLength else { return }
+        before = String(text.dropLast(word.count))
+        // Fewer characters than asked for means the field starts there.
+        beforeStartKnown = text.count < Self.contextLength
         engine.load(word)
     }
 

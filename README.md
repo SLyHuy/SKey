@@ -43,8 +43,20 @@ Với bản ký ad-hoc, macOS coi mỗi bản build là một app khác nên **q
 Dấu gõ muộn cũng được, kể cả sau phụ âm cuối: `tieengs`, `tieesng`, `hienej` (hiện), `tiengse` (tiếng), `nguoiwf` (người), `dodongj` (động).
 
 ### Sửa dấu cho từ đã gõ
-- **Bằng ⌫**: gõ `taan`, bấm cách, ⌫ để lùi về "tân", gõ `j` ra "tận". Thêm hoặc đổi dấu, đổi `d` thành `đ` (`dang ⌫ d` → đang) đều được. Chạy ở mọi app.
-- **Bằng chuột hoặc phím mũi tên**: đặt con trỏ ngay **cuối** từ cần sửa rồi gõ phím dấu. SKey đọc từ trước con trỏ qua Accessibility. Tính năng này chỉ chạy ở những app cho phép đọc chữ (hầu hết app macOS, trình duyệt); con trỏ nằm giữa từ thì SKey không động vào. Tắt được trong menu → Tuỳ chọn.
+- **Bằng ⌫**: gõ `taan`, bấm cách, ⌫ để lùi về "tân", gõ `j` ra "tận". Thêm hoặc đổi dấu, đổi `d` thành `đ` (`dang ⌫ d` → đang) đều được. SKey nhớ 21 ký tự gần nhất, nên lùi qua dấu câu, vài khoảng trắng hay một từ ngắn vẫn sửa được. Chạy ở mọi app.
+- **Bằng chuột hoặc phím mũi tên**: đặt con trỏ ngay **cuối** từ cần sửa rồi gõ phím dấu. SKey đọc tối đa 14 ký tự trước con trỏ qua Accessibility. Tính năng này chỉ chạy ở những app cho phép đọc chữ (hầu hết app macOS, trình duyệt); con trỏ nằm giữa từ thì SKey không động vào. Tắt được trong menu → Tuỳ chọn.
+- Chỉ sửa được từ có tối đa **7 chữ cái**, độ dài tối đa của một từ tiếng Việt ("nghiêng"). Từ dài hơn là tiếng Anh, không có gì để sửa.
+
+## Quyền riêng tư & bảo mật
+Bộ gõ nhìn thấy mọi phím bạn gõ, nên SKey được thiết kế để giữ và đọc ít nhất có thể:
+
+- **Không kết nối mạng.** Không có dòng code mạng nào, bản build không liên kết thư viện mạng. Không tự cập nhật, không thống kê.
+- **Không ghi lại phím gõ.** Không ghi file, không ghi log, không dùng clipboard. Dữ liệu duy nhất lưu trên đĩa là các tuỳ chọn trong menu.
+- **Bộ nhớ tạm tối đa 21 ký tự** (từ đang gõ không tính), chỉ nằm trong RAM, để sửa dấu bằng ⌫. Bị xoá ngay khi bạn click chuột, bấm phím mũi tên, dùng phím tắt hoặc chuyển app.
+- **Đọc tối đa 14 ký tự trước con trỏ** qua Accessibility, chỉ một lần, sau khi bạn di chuyển con trỏ và gõ một phím dấu. Không đọc gì sau con trỏ ngoài việc kiểm tra ký tự liền sau có phải chữ cái hay không. Tắt được trong menu → Tuỳ chọn.
+- **Ô mật khẩu:** khi bạn gõ mật khẩu, macOS bật chế độ nhập an toàn (Secure Input) và không chuyển phím tới SKey, nên SKey không thấy phím và không đọc ô đó.
+- **Quyền cần có:** chỉ Accessibility (để nhận phím và gửi chữ có dấu). App không xin thêm entitlement nào. Nút "Làm mới quyền" chạy `tccutil reset Accessibility com.huyly.skey`, chỉ xoá quyền của chính SKey.
+- **Mã nguồn mở, không phụ thuộc thư viện ngoài:** mọi thứ SKey làm đều nằm trong repo này để bạn kiểm tra.
 
 ### Gõ song ngữ (viết code, comment)
 - **SKey không bao giờ tự sửa chữ đã gõ.** Chữ hiện ra thế nào thì giữ thế ấy, kể cả khi kết thúc từ. Gõ nhầm (ví dụ `taank` ra "tânk") thì bấm ⌫ sửa lại: "tân", rồi gõ `j` ra "tận".

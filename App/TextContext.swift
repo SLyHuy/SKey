@@ -9,7 +9,8 @@ enum TextContext {
     private static let systemWide = AXUIElementCreateSystemWide()
     /// Never hold up typing: an app that does not answer quickly is skipped.
     private static let timeout: Float = 0.05
-    private static let lookBehind = 40
+    /// Read as little as possible: a 7-letter word plus brackets, quotes and spaces.
+    private static let lookBehind = TypingSession.contextLength
 
     static func beforeCaret() -> TypingSession.Context? {
         AXUIElementSetMessagingTimeout(systemWide, timeout)

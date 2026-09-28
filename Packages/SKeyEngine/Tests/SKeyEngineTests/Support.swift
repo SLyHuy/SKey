@@ -6,9 +6,12 @@ struct Screen {
     var session: TypingSession
     var text = ""
     var caret = 0
+    /// False simulates an app that does not expose its text to Accessibility.
+    var contextAvailable = true
 
-    init(style: ToneStyle = .old, existing: String = "") {
+    init(style: ToneStyle = .old, existing: String = "", contextAvailable: Bool = true) {
         session = TypingSession(toneStyle: style)
+        self.contextAvailable = contextAvailable
         text = existing
         caret = existing.count
     }
@@ -29,6 +32,7 @@ struct Screen {
 
     /// What the Accessibility API reports: text before the caret, and whether a letter follows.
     func context() -> TypingSession.Context? {
+        guard contextAvailable else { return nil }
         let chars = Array(text)
         return (String(chars[..<caret]), caret < chars.count && chars[caret].isLetter)
     }

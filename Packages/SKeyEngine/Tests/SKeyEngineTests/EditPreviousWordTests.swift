@@ -98,6 +98,67 @@ struct EditPreviousWordTests {
         #expect(s.text == "classes")
     }
 
+    // MARK: Privacy limits: read and remember as little as possible
+
+    @Test func limits() {
+        #expect(TypingSession.maxWordLength == 7)
+        #expect(TypingSession.contextLength == 14)
+        #expect(TypingSession.memoryLength == 21)
+    }
+
+    @Test func wordInBracketsAndQuotes() {
+        var s = Screen(existing: "print(\"tan\")")
+        s.moveCaret(to: 10)  // right after "tan", before the closing quote
+        s.type("j")
+        #expect(s.text == "print(\"tạn\")")
+    }
+
+    @Test func onlyTheLast14CharactersAreUsed() {
+        var s = Screen(existing: "một câu rất dài trước từ tân")
+        s.moveCaret(to: s.text.count)
+        s.type("j")
+        #expect(s.text == "một câu rất dài trước từ tận")
+    }
+
+    @Test func wordsLongerThan7LettersAreNeverTakenOver() {
+        var s = Screen(existing: "internationalization")
+        s.moveCaret(to: s.text.count)
+        s.type("s")
+        #expect(s.text == "internationalizations")
+
+        var t = Screen()
+        t.type("internationalization ")
+        t.backspace()
+        t.type("s")
+        #expect(t.text == "internationalizations")
+    }
+
+    @Test func backspaceWithinMemoryReachesTwoWordsBack() {
+        var s = Screen(contextAvailable: false)
+        s.type("laf Huy ")  // 8 characters, well within 21
+        s.backspace(5)
+        s.type("z")
+        #expect(s.text == "la")
+    }
+
+    /// When memory trimmed the start of a word, SKey does not guess from the fragment: it
+    /// asks the app for the real text, or leaves the word alone if the app cannot tell.
+    @Test func trimmedWordIsNotGuessed() {
+        let typed = "nguowif" + String(repeating: " ", count: 18)  // "người" + 18 spaces > 21
+
+        var withContext = Screen()
+        withContext.type(typed)
+        withContext.backspace(18)
+        withContext.type("z")
+        #expect(withContext.text == "ngươi")
+
+        var withoutContext = Screen(contextAvailable: false)
+        withoutContext.type(typed)
+        withoutContext.backspace(18)
+        withoutContext.type("z")
+        #expect(withoutContext.text == "ngườiz")
+    }
+
     // MARK: Engine building blocks
 
     @Test func loadThenModify() {
