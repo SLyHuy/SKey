@@ -83,7 +83,15 @@ cd Packages/SKeyEngine && swift test   # test engine Telex
 
 Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt với bản release `com.huyly.skey`, nên quyền của hai bản không đè lên nhau. Không có `Local.xcconfig` thì bản dev ký ad-hoc và phải cấp lại quyền sau mỗi lần build.
 
-**Đóng góp:** nhánh `master` được bảo vệ, mọi thay đổi đi qua pull request. Workflow **CI** (`.github/workflows/ci.yml`) chạy test engine và build app cho mỗi PR; PR chỉ merge được khi CI đạt.
+**Đóng góp:** nhánh `master` được bảo vệ, mọi thay đổi đi qua pull request, kể cả của người duy trì dự án.
+- Workflow **CI** (`.github/workflows/ci.yml`) chạy test engine và build app cho mỗi PR; PR chỉ merge được khi CI đạt và đã cập nhật theo `master`.
+- **Commit phải có chữ ký** (SSH hoặc GPG) và hiện nhãn **Verified** trên GitHub. Ký bằng SSH key sẵn có:
+  ```bash
+  git config --global gpg.format ssh
+  git config --global user.signingkey ~/.ssh/id_ed25519.pub
+  git config --global commit.gpgsign true
+  ```
+  rồi thêm key đó trên GitHub ở dạng **Signing Key** (Settings → SSH and GPG keys).
 
 **Phát hành:** bản chính thức do GitHub Actions build, không build trên máy cá nhân.
 1. Nâng `MARKETING_VERSION` (và `CURRENT_PROJECT_VERSION`) trong `project.yml`, merge vào `master`.
