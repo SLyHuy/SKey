@@ -10,8 +10,8 @@ Bộ gõ **Telex** tối giản cho macOS. Làm đúng một việc: gõ tiếng
 
 SKey được phát hành **không kèm chứng chỉ Apple** (chữ ký ad-hoc), nên lần đầu cần vài bước:
 
-1. Tải `SKey-x.y.z.zip` tại [trang Releases](https://github.com/SLyHuy/SKey/releases/latest), kiểm tra checksum nếu muốn: `shasum -a 256 SKey-x.y.z.zip` (so với file `.sha256`).
-2. Giải nén, kéo **SKey.app** vào **Applications**.
+1. Tải `SKey-x.y.z.dmg` (hoặc bản `.zip`) tại [trang Releases](https://github.com/SLyHuy/SKey/releases/latest). Muốn kiểm tra file thì chạy `shasum -a 256 SKey-x.y.z.dmg` và so với file `SKey-x.y.z.sha256`.
+2. Mở file DMG (hoặc giải nén file zip), kéo **SKey.app** vào **Applications**.
 3. Mở SKey. macOS sẽ chặn vì "không xác minh được nhà phát triển":
    vào **System Settings → Privacy & Security**, kéo xuống, bấm **Open Anyway**.
    Hoặc chạy lệnh sau trong Terminal:
@@ -75,7 +75,7 @@ Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt
 ```bash
 ./scripts/release.sh
 ```
-Script chạy test, build universal (arm64 + x86_64), ký ad-hoc, rồi tạo `dist/SKey-<version>.zip` và file `.sha256`. Phiên bản đặt ở `MARKETING_VERSION` trong `project.yml`.
+Script chạy test, build universal (arm64 + x86_64), ký ad-hoc, rồi tạo `dist/SKey-<version>.dmg`, `dist/SKey-<version>.zip` và file checksum `SKey-<version>.sha256`. Icon app được vẽ bằng code: sửa `scripts/make-icon.swift` rồi chạy `swift scripts/make-icon.swift`. Phiên bản đặt ở `MARKETING_VERSION` trong `project.yml`.
 
 ## Cấu trúc
 

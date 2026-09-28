@@ -1,64 +1,113 @@
 // Draws the SKey app icon and writes App/Assets.xcassets/AppIcon.appiconset.
-// Run from the repo root:  swift scripts/make-icon.swift
+// Run from the repo root:  swift scripts/make-icon.swift [preview.png]
+//
+// Design: a white Mac keycap on a deep blue squircle. The key carries a bold rounded "S"
+// with a coral acute accent: the S of SKey, a Vietnamese tone mark, and the very key that
+// types the acute tone in Telex.
 import AppKit
 
 let output = URL(fileURLWithPath: "App/Assets.xcassets/AppIcon.appiconset", isDirectory: true)
 
-func drawIcon(in ctx: CGContext, size s: CGFloat) {
-    let u = s / 1024  // design units: 1024 × 1024 canvas, macOS icon grid
-    let body = CGRect(x: 100 * u, y: 100 * u, width: 824 * u, height: 824 * u)
-    let bodyPath = CGPath(roundedRect: body, cornerWidth: 185 * u, cornerHeight: 185 * u, transform: nil)
+func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
+    CGColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
+}
 
-    // Soft drop shadow, then the blue → indigo body.
-    ctx.saveGState()
-    ctx.setShadow(offset: CGSize(width: 0, height: -10 * u), blur: 28 * u,
-                  color: CGColor(gray: 0, alpha: 0.28))
-    ctx.addPath(bodyPath)
-    ctx.setFillColor(CGColor(red: 0.20, green: 0.33, blue: 0.86, alpha: 1))
-    ctx.fillPath()
-    ctx.restoreGState()
+/// Continuous-corner rounded rectangle (superellipse corners), like macOS icons.
+func squircle(_ r: CGRect, radius: CGFloat) -> CGPath {
+    let path = CGMutablePath()
+    let k: CGFloat = 1.28  // how far the curve starts before the corner, relative to radius
+    let c = min(radius * k, min(r.width, r.height) / 2)
+    path.move(to: CGPoint(x: r.minX + c, y: r.minY))
+    path.addLine(to: CGPoint(x: r.maxX - c, y: r.minY))
+    path.addCurve(to: CGPoint(x: r.maxX, y: r.minY + c),
+                  control1: CGPoint(x: r.maxX - c * 0.36, y: r.minY), control2: CGPoint(x: r.maxX, y: r.minY + c * 0.36))
+    path.addLine(to: CGPoint(x: r.maxX, y: r.maxY - c))
+    path.addCurve(to: CGPoint(x: r.maxX - c, y: r.maxY),
+                  control1: CGPoint(x: r.maxX, y: r.maxY - c * 0.36), control2: CGPoint(x: r.maxX - c * 0.36, y: r.maxY))
+    path.addLine(to: CGPoint(x: r.minX + c, y: r.maxY))
+    path.addCurve(to: CGPoint(x: r.minX, y: r.maxY - c),
+                  control1: CGPoint(x: r.minX + c * 0.36, y: r.maxY), control2: CGPoint(x: r.minX, y: r.maxY - c * 0.36))
+    path.addLine(to: CGPoint(x: r.minX, y: r.minY + c))
+    path.addCurve(to: CGPoint(x: r.minX + c, y: r.minY),
+                  control1: CGPoint(x: r.minX, y: r.minY + c * 0.36), control2: CGPoint(x: r.minX + c * 0.36, y: r.minY))
+    path.closeSubpath()
+    return path
+}
 
+func linearGradient(_ ctx: CGContext, _ path: CGPath, _ colors: [CGColor], from: CGPoint, to: CGPoint) {
     ctx.saveGState()
-    ctx.addPath(bodyPath)
+    ctx.addPath(path)
     ctx.clip()
-    let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: [
-        CGColor(red: 0.33, green: 0.55, blue: 1.00, alpha: 1),
-        CGColor(red: 0.20, green: 0.27, blue: 0.82, alpha: 1),
-    ] as CFArray, locations: [0, 1])!
-    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: body.maxY), end: CGPoint(x: 0, y: body.minY), options: [])
+    let g = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: colors as CFArray, locations: nil)!
+    ctx.drawLinearGradient(g, start: from, end: to, options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+    ctx.restoreGState()
+}
+
+func drawIcon(in ctx: CGContext, size s: CGFloat) {
+    let u = s / 1024  // design units on the 1024 macOS icon grid
+    func R(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect { CGRect(x: x * u, y: y * u, width: w * u, height: h * u) }
+    func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * u, y: y * u) }
+
+    // 1. Body: deep blue squircle with a soft drop shadow.
+    let body = squircle(R(100, 100, 824, 824), radius: 185 * u)
+    ctx.saveGState()
+    ctx.setShadow(offset: CGSize(width: 0, height: -12 * u), blur: 30 * u, color: color(0x000000, 0.30))
+    ctx.addPath(body)
+    ctx.setFillColor(color(0x2440B8))
+    ctx.fillPath()
+    ctx.restoreGState()
+    linearGradient(ctx, body, [color(0x4F86FF), color(0x2B45C9), color(0x1B2A8A)], from: P(512, 924), to: P(512, 100))
+    // Gentle light from the top.
+    ctx.saveGState()
+    ctx.addPath(body)
+    ctx.clip()
+    let glow = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                          colors: [color(0xFFFFFF, 0.22), color(0xFFFFFF, 0)] as CFArray, locations: nil)!
+    ctx.drawRadialGradient(glow, startCenter: P(512, 900), startRadius: 0, endCenter: P(512, 900), endRadius: 560 * u, options: [])
     ctx.restoreGState()
 
-    // The input badge, same proportions as the menu bar icon (22 × 16, 4 pt corners).
-    let badge = CGRect(x: 512 * u - 260 * u, y: 446 * u, width: 520 * u, height: 378 * u)
-    ctx.addPath(CGPath(roundedRect: badge, cornerWidth: 94 * u, cornerHeight: 94 * u, transform: nil))
-    ctx.setFillColor(.white)
+    // 2. Keycap: shadow, skirt (the key's sides), then the slightly dished top face.
+    let skirt = squircle(R(222, 206, 580, 590), radius: 118 * u)
+    ctx.saveGState()
+    ctx.setShadow(offset: CGSize(width: 0, height: -26 * u), blur: 44 * u, color: color(0x0B1450, 0.55))
+    ctx.addPath(skirt)
+    ctx.setFillColor(color(0xC3CCE4))
     ctx.fillPath()
+    ctx.restoreGState()
+    linearGradient(ctx, skirt, [color(0xE4E9F6), color(0xB3BEDC)], from: P(512, 796), to: P(512, 206))
 
-    let ns = NSGraphicsContext(cgContext: ctx, flipped: false)
+    let top = squircle(R(262, 290, 500, 480), radius: 92 * u)
+    linearGradient(ctx, top, [color(0xFFFFFF), color(0xEEF2FB)], from: P(512, 770), to: P(512, 290))
+    ctx.saveGState()  // thin highlight rim on the top face
+    ctx.addPath(top)
+    ctx.setStrokeColor(color(0xFFFFFF, 0.9))
+    ctx.setLineWidth(3 * u)
+    ctx.strokePath()
+    ctx.restoreGState()
+
+    // 3. Legend: bold rounded "S" in ink, coral acute accent (dấu sắc).
     NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = ns
-
-    let badgeFont = NSFont.systemFont(ofSize: 272 * u, weight: .bold)
-    let vi = NSAttributedString(string: "VI", attributes: [
-        .font: badgeFont,
-        .foregroundColor: NSColor(red: 0.24, green: 0.36, blue: 0.90, alpha: 1),
-        .kern: 6 * u,
-    ])
-    let viWidth = vi.size().width - 6 * u
-    let viBaseline = badge.midY - badgeFont.capHeight / 2
-    vi.draw(at: NSPoint(x: badge.midX - viWidth / 2, y: viBaseline + badgeFont.descender))
-
-    // "</>" underneath: made for code.
-    let codeFont = NSFont.monospacedSystemFont(ofSize: 150 * u, weight: .semibold)
-    let code = NSAttributedString(string: "</>", attributes: [
-        .font: codeFont,
-        .foregroundColor: NSColor(white: 1, alpha: 0.85),
-    ])
-    let codeWidth = code.size().width
-    let codeBaseline = 262 * u - codeFont.capHeight / 2
-    code.draw(at: NSPoint(x: 512 * u - codeWidth / 2, y: codeBaseline + codeFont.descender))
-
+    NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+    let base = NSFont.systemFont(ofSize: 320 * u, weight: .heavy)
+    let font = base.fontDescriptor.withDesign(.rounded).flatMap { NSFont(descriptor: $0, size: 320 * u) } ?? base
+    let s = NSAttributedString(string: "S", attributes: [.font: font, .foregroundColor: NSColor(cgColor: color(0x1C2660))!])
+    let width = s.size().width
+    let centerX: CGFloat = 500 * u
+    let baseline = 500 * u - font.capHeight / 2 - 24 * u
+    s.draw(at: NSPoint(x: centerX - width / 2, y: baseline + font.descender))
     NSGraphicsContext.restoreGraphicsState()
+
+    let accent = CGMutablePath()
+    accent.move(to: P(566, 636))
+    accent.addLine(to: P(612, 690))
+    ctx.saveGState()
+    ctx.addPath(accent)
+    ctx.setLineCap(.round)
+    ctx.setLineWidth(40 * u)
+    ctx.setStrokeColor(color(0xFF5A4F))
+    ctx.strokePath()
+    ctx.restoreGState()
 }
 
 func png(pixels: Int) -> Data {
@@ -66,8 +115,32 @@ func png(pixels: Int) -> Data {
                         space: CGColorSpace(name: CGColorSpace.sRGB)!,
                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
     drawIcon(in: ctx, size: CGFloat(pixels))
-    let rep = NSBitmapImageRep(cgImage: ctx.makeImage()!)
-    return rep.representation(using: .png, properties: [:])!
+    return NSBitmapImageRep(cgImage: ctx.makeImage()!).representation(using: .png, properties: [:])!
+}
+
+// Optional: a preview sheet (1024 plus the small sizes as macOS shows them).
+if CommandLine.arguments.count > 1 {
+    let sizes: [CGFloat] = [512, 128, 64, 32, 16]
+    let sheet = CGContext(data: nil, width: 1000, height: 560, bitsPerComponent: 8, bytesPerRow: 0,
+                          space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    for (i, bg) in [color(0xF2F2F2), color(0x1E1E1E)].enumerated() {
+        sheet.setFillColor(bg)
+        sheet.fill(CGRect(x: CGFloat(i) * 500, y: 0, width: 500, height: 560))
+        var x = CGFloat(i) * 500 + 20
+        for size in sizes {
+            let img = NSImage(data: png(pixels: Int(size * 2)))!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+            let shown = size == 512 ? 300 : size
+            let y: CGFloat = size == 512 ? 230 : 110
+            sheet.draw(img, in: CGRect(x: x, y: y, width: shown, height: shown))
+            x += size == 512 ? 0 : shown + 18
+            if size == 512 { x = CGFloat(i) * 500 + 20 }
+        }
+    }
+    let data = NSBitmapImageRep(cgImage: sheet.makeImage()!).representation(using: .png, properties: [:])!
+    try data.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
+    print("Preview written to \(CommandLine.arguments[1])")
+    exit(0)
 }
 
 let entries: [(points: Int, scale: Int)] = [
@@ -83,7 +156,6 @@ for e in entries {
 let contents: [String: Any] = ["images": images, "info": ["author": "xcode", "version": 1]]
 try JSONSerialization.data(withJSONObject: contents, options: [.prettyPrinted, .sortedKeys])
     .write(to: output.appendingPathComponent("Contents.json"))
-
 let catalog = output.deletingLastPathComponent().appendingPathComponent("Contents.json")
 try #"{ "info" : { "author" : "xcode", "version" : 1 } }"#.data(using: .utf8)!.write(to: catalog)
 print("Wrote \(entries.count) icons to \(output.path)")
