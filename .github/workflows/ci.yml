@@ -26,9 +26,11 @@ jobs:
         working-directory: Packages/SKeyEngine
         run: swift test
 
+      - name: Install XcodeGen (pinned, checksum verified)
+        run: ./scripts/install-xcodegen.sh
+
       - name: Build the app
         run: |
-          brew install xcodegen
           xcodegen generate
           xcodebuild -project SKey.xcodeproj -scheme SKey -configuration Debug \
             -destination 'generic/platform=macOS' -derivedDataPath build/DerivedData build

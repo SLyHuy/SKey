@@ -43,10 +43,16 @@ cat > "$STAGE/Đọc trước khi cài.txt" <<'NOTES'
 CÀI ĐẶT SKEY
 
 1. Kéo SKey.app vào thư mục Applications (biểu tượng bên cạnh).
-2. Mở SKey từ Applications. Lần đầu macOS sẽ chặn vì SKey chưa được
-   Apple notarize: vào System Settings → Privacy & Security, bấm
-   "Open Anyway". Hoặc chạy trong Terminal:
+2. Mở SKey từ Applications. macOS sẽ báo "SKey" Not Opened: Apple could
+   not verify "SKey" is free of malware... Đây là thông báo bình thường cho
+   mọi app chưa được Apple notarize, không có nghĩa Apple tìm thấy mã độc.
+   - Bấm "Done" (đừng bấm "Move to Trash").
+   - Vào System Settings → Privacy & Security, kéo xuống phần Security,
+     bấm "Open Anyway", xác nhận bằng mật khẩu hoặc Touch ID.
+   - Hoặc chạy trong Terminal:
        xattr -dr com.apple.quarantine /Applications/SKey.app
+   Muốn chắc chắn file tải về là bản gốc, kiểm tra trước bằng:
+       gh attestation verify SKey-x.y.z.dmg -R SLyHuy/SKey
 3. Làm theo màn hình "Cài đặt SKey": cấp quyền Accessibility, chỉ giữ
    input source ABC, tắt tự sửa chính tả và gợi ý chữ của macOS.
 

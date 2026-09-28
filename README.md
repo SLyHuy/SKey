@@ -57,6 +57,7 @@ Bộ gõ nhìn thấy mọi phím bạn gõ, nên SKey được thiết kế đ�
 - **Ô mật khẩu:** khi bạn gõ mật khẩu, macOS bật chế độ nhập an toàn (Secure Input) và không chuyển phím tới SKey, nên SKey không thấy phím và không đọc ô đó.
 - **Quyền cần có:** chỉ Accessibility (để nhận phím và gửi chữ có dấu). App không xin thêm entitlement nào. Nút "Làm mới quyền" chạy `tccutil reset Accessibility com.huyly.skey`, chỉ xoá quyền của chính SKey.
 - **Mã nguồn mở, không phụ thuộc thư viện ngoài:** mọi thứ SKey làm đều nằm trong repo này để bạn kiểm tra.
+- **Báo lỗ hổng bảo mật:** báo riêng qua GitHub, không mở Issue công khai. Xem [SECURITY.md](SECURITY.md).
 
 ### Gõ song ngữ (viết code, comment)
 - **SKey không bao giờ tự sửa chữ đã gõ.** Chữ hiện ra thế nào thì giữ thế ấy, kể cả khi kết thúc từ. Gõ nhầm (ví dụ `taank` ra "tânk") thì bấm ⌫ sửa lại: "tân", rồi gõ `j` ra "tận".
@@ -84,7 +85,7 @@ cd Packages/SKeyEngine && swift test   # test engine Telex
 Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt với bản release `com.huyly.skey`, nên quyền của hai bản không đè lên nhau. Không có `Local.xcconfig` thì bản dev ký ad-hoc và phải cấp lại quyền sau mỗi lần build.
 
 **Đóng góp:** nhánh `master` được bảo vệ, mọi thay đổi đi qua pull request, kể cả của người duy trì dự án.
-- Workflow **CI** (`.github/workflows/ci.yml`) chạy test engine và build app cho mỗi PR; PR chỉ merge được khi CI đạt và đã cập nhật theo `master`.
+- Workflow **CI** (`.github/workflows/ci.yml`) chạy test engine và build app cho mỗi PR; PR chỉ merge được khi CI đạt và đã cập nhật theo `master`. CI dùng XcodeGen ghim phiên bản và kiểm tra checksum (`scripts/install-xcodegen.sh`); Dependabot tự mở PR khi các GitHub Action có bản mới.
 - **Commit phải có chữ ký** (SSH hoặc GPG) và hiện nhãn **Verified** trên GitHub. Ký bằng SSH key sẵn có:
   ```bash
   git config --global gpg.format ssh
@@ -99,8 +100,15 @@ Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt
 
 Hoặc từ dòng lệnh:
 ```bash
-gh workflow run release.yml -R SLyHuy/SKey -f bump=patch
+gh workflow run release.yml -R SLyHuy/SKey -f bump=patch -f highlights="Sửa lỗi gõ ươ khi gõ nhanh"
 ```
+
+**Ghi chú release** được ghép tự động từ ba phần:
+- **Điểm nổi bật**: câu bạn gõ vào ô *highlights* khi bấm Run workflow (tuỳ chọn).
+- **Có gì thay đổi**: danh sách PR đã merge kể từ bản trước, nhóm theo nhãn của PR (`.github/release.yml`): `enhancement` → Tính năng mới, `bug` → Sửa lỗi, `security` → Bảo mật, `documentation` → Tài liệu, còn lại → Khác. PR có nhãn `skip-changelog` và PR của Dependabot không được liệt kê. Vì vậy hãy đặt tiêu đề PR rõ ràng và gắn nhãn trước khi merge.
+- **Cài đặt và kiểm tra file**: từ `.github/release-notes.md`.
+
+Sau khi phát hành vẫn có thể sửa ghi chú trực tiếp trên trang Release của GitHub.
 Đẩy tag thủ công (`git tag v1.2.3 && git push origin v1.2.3`) cũng kích hoạt workflow.
 
 Người dùng kiểm tra file tải về được build từ repo này bằng:
