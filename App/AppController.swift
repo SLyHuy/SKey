@@ -13,6 +13,13 @@ final class AppController {
     let state = AppState()
     private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
 
+    var statusImage: NSImage {
+        if state.isSecureInputActive {
+            return state.showsVietnamese ? StatusIcon.vietnameseLocked : StatusIcon.englishLocked
+        }
+        return state.showsVietnamese ? StatusIcon.vietnamese : StatusIcon.english
+    }
+
     @ObservationIgnored private let tap = KeyboardTap()
     @ObservationIgnored private let router: KeyRouter
     @ObservationIgnored private var frontAppMonitor: FrontAppMonitor?
@@ -32,8 +39,10 @@ final class AppController {
         frontAppMonitor = FrontAppMonitor { [weak self] app in
             self?.state.frontApp = app
             self?.router.reset()
+            self?.updateSecureInput()
         }
         updateInputSource()
+        updateSecureInput()
         inputSourceObserver = InputSourceCheck.observe { [weak self] in self?.updateInputSource() }
 
         checkPermission()
@@ -42,6 +51,7 @@ final class AppController {
                 guard let self else { return }
                 self.checkPermission()
                 self.updateInputSource()  // safety net if a change notification is missed
+                self.updateSecureInput()
                 if self.onboardingWindow?.isVisible == true { self.refreshTips() }
             }
         }
@@ -128,6 +138,15 @@ final class AppController {
         state.activeInputMethod = status.inputMethod
         state.activeInputMethodIsVietnamese = status.isAppleVietnamese
         router.reset()
+    }
+
+    // MARK: - Secure input
+
+    private func updateSecureInput() {
+        let status = SecureInputCheck.current()
+        guard status.isEnabled != state.isSecureInputActive || status.appName != state.secureInputAppName else { return }
+        state.isSecureInputActive = status.isEnabled
+        state.secureInputAppName = status.appName
     }
 
     // MARK: - Menu actions

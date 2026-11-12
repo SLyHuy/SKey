@@ -7,11 +7,17 @@ import AppKit
 enum StatusIcon {
     static let vietnamese = badge("VI")
     static let english = badge("EN")
+    static let vietnameseLocked = lockedBadge("VI")
+    static let englishLocked = lockedBadge("EN")
 
     /// Measured from the system badges: 22 × 16 pt, ~4 pt corners, cap height ≈ half.
     private static let size = NSSize(width: 22, height: 16)
+    private static let lockedSize = NSSize(width: 33, height: 16)
     private static let cornerRadius: CGFloat = 4
     private static let font = NSFont.systemFont(ofSize: 11.5, weight: .bold)
+    private static let lockedFont = NSFont.systemFont(ofSize: 10.5, weight: .bold)
+    private static let lockSymbolConfig = NSImage.SymbolConfiguration(pointSize: 7.5, weight: .bold)
+        .applying(.init(paletteColors: [.white]))
 
     private static func badge(_ text: String) -> NSImage {
         let image = NSImage(size: size, flipped: false) { rect in
@@ -34,6 +40,36 @@ enum StatusIcon {
         }
         image.isTemplate = true
         image.accessibilityDescription = text == "VI" ? "Tiếng Việt" : "English"
+        return image
+    }
+
+    private static func lockedBadge(_ text: String) -> NSImage {
+        let image = NSImage(size: lockedSize, flipped: false) { rect in
+            // Attention-grabbing red badge
+            NSColor.systemRed.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+
+            let label = NSAttributedString(string: text, attributes: [
+                .font: lockedFont,
+                .foregroundColor: NSColor.white,
+                .kern: 0.2,
+            ])
+            let baseline = (rect.midY - lockedFont.capHeight / 2).rounded(toMultipleOf: 0.5)
+            let textOrigin = NSPoint(x: 4.5, y: baseline + lockedFont.descender)
+            label.draw(at: textOrigin)
+
+            if let lock = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil)?
+                .withSymbolConfiguration(lockSymbolConfig) {
+                let lockSize = lock.size
+                // Shift y up slightly (+0.75pt) so the lock's shackle and body visually balance with the text
+                let lockY = ((rect.height - lockSize.height) / 2 + 0.75).rounded(toMultipleOf: 0.5)
+                let lockOrigin = NSPoint(x: rect.maxX - lockSize.width - 4.5, y: lockY)
+                lock.draw(at: lockOrigin, from: .zero, operation: .sourceOver, fraction: 1.0)
+            }
+            return true
+        }
+        image.isTemplate = false  // Keep vibrant red color in menu bar
+        image.accessibilityDescription = text == "VI" ? "Tiếng Việt (Secure Input)" : "English (Secure Input)"
         return image
     }
 }

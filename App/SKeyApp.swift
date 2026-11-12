@@ -10,7 +10,7 @@ struct SKeyApp: App {
         MenuBarExtra {
             MenuContent(controller: controller)
         } label: {
-            Image(nsImage: controller.state.showsVietnamese ? StatusIcon.vietnamese : StatusIcon.english)
+            Image(nsImage: controller.statusImage)
         }
         .menuBarExtraStyle(.menu)
     }
@@ -42,6 +42,13 @@ private struct MenuContent: View {
                 Text("⚠︎ Đang bật \(method) của macOS. Hãy chuyển về ABC.")
             } else {
                 Text("SKey tạm nghỉ khi dùng \(method)")
+            }
+        }
+        if state.isSecureInputActive {
+            if let app = state.secureInputAppName {
+                Text("🔒 \"\(app)\" đang bật Secure Input. SKey tạm thời bị chặn gõ.")
+            } else {
+                Text("🔒 Một ứng dụng đang bật Secure Input. SKey tạm thời bị chặn gõ.")
             }
         }
         if !state.permissionGranted {

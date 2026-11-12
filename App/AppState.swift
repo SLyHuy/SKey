@@ -46,6 +46,9 @@ final class AppState {
     /// SKey stays out of the way while one is selected.
     var activeInputMethod: String?
     var activeInputMethodIsVietnamese = false
+    /// Whether macOS has Secure Keyboard Entry active (e.g. password field, secure terminal).
+    var isSecureInputActive = false
+    var secureInputAppName: String?
     /// macOS settings shown in the setup guide, refreshed while it is open.
     var systemTips: [SystemTip] = []
 
@@ -58,7 +61,7 @@ final class AppState {
     var showsVietnamese: Bool { isVietnamese && !frontAppIsEnglishOnly }
 
     /// Whether keys should go through the Telex engine right now.
-    var isComposing: Bool { showsVietnamese && activeInputMethod == nil }
+    var isComposing: Bool { showsVietnamese && activeInputMethod == nil && !isSecureInputActive }
 
     static let defaultEnglishApps = [
         "com.apple.Terminal",
