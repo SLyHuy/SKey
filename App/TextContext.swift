@@ -13,15 +13,49 @@ enum TextContext {
     /// Read as little as possible: a 7-letter word plus brackets, quotes and spaces.
     private static let lookBehind = TypingSession.contextLength
 
-    /// Bundle ID of the app owning the currently focused UI element, including non-activating
-    /// overlays (Spotlight, launchers) that NSWorkspace.frontmostApplication never reports.
-    /// Reads only the owning PID — never any text content.
+    private static let spotlightOwnerBundleIDs: Set<String> = [
+        AppState.spotlightBundleID,
+        "com.apple.campo",
+        "com.apple.CampoRemoteService",
+    ]
+
+    /// Bundle ID of a non-activating overlay (such as Spotlight) that currently holds keyboard
+    /// focus. Checks on-screen floating Spotlight windows first (macOS 27 runs Spotlight inside
+    /// `com.apple.campo`, and `AXUIElementCreateSystemWide()` still points at the underlying
+    /// frontmost app for non-activating `LSUIElement` panels), then falls back to Accessibility.
+    /// Reads only window metadata / owning PID — never any text content.
     static func focusedBundleID() -> String? {
+        if isSpotlightWindowOnScreen() {
+            return AppState.spotlightBundleID
+        }
         AXUIElementSetMessagingTimeout(systemWide, timeout)
         guard let element: AXUIElement = copy(systemWide, kAXFocusedUIElementAttribute) else { return nil }
         var pid: pid_t = 0
         guard AXUIElementGetPid(element, &pid) == .success, pid != 0 else { return nil }
-        return NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
+        guard let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier else { return nil }
+        return spotlightOwnerBundleIDs.contains(bundleID) ? AppState.spotlightBundleID : bundleID
+    }
+
+    private static func isSpotlightWindowOnScreen() -> Bool {
+        guard let windows = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
+        ) as? [[String: Any]] else { return false }
+
+        for window in windows {
+            guard let layer = window[kCGWindowLayer as String] as? Int, layer > 0,
+                  let alpha = window[kCGWindowAlpha as String] as? Double, alpha > 0.01,
+                  let bounds = window[kCGWindowBounds as String] as? [String: Any],
+                  let width = bounds["Width"] as? Double, width >= 200,
+                  let height = bounds["Height"] as? Double, height >= 40,
+                  let pid = window[kCGWindowOwnerPID as String] as? pid_t,
+                  let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
+            else { continue }
+
+            if spotlightOwnerBundleIDs.contains(bundleID) {
+                return true
+            }
+        }
+        return false
     }
 
     static func beforeCaret() -> TypingSession.Context? {

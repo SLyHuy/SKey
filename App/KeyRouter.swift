@@ -96,6 +96,7 @@ final class KeyRouter: KeyboardTapDelegate {
             invalidateFocus(at: now)
         } else {
             if focusCheckNeeded
+                || (session.engine.isEmpty && state.focusedOverlayBundleID == nil)
                 || (now - lastFocusEventTime) < Self.focusGraceWindow
                 || (now - lastKeyTime) >= Self.idleRecheckInterval {
                 refreshFocusedOverlay()
