@@ -10,6 +10,17 @@ final class KeyRouter: KeyboardTapDelegate {
     private var session = TypingSession()
     private var chord = ModifierChord()
 
+    /// Re-check the focused Accessibility element on the next keystroke when a shortcut,
+    /// click, Escape/Return, or pause may have opened or dismissed a non-activating overlay
+    /// like Spotlight. Continuous typing never pays the Accessibility lookup cost.
+    private var focusCheckNeeded = true
+    private var lastFocusEventTime: TimeInterval = 0
+    private var lastKeyTime: TimeInterval = 0
+    private var visualRefreshTask: Task<Void, Never>?
+
+    private static let focusGraceWindow: TimeInterval = 0.4
+    private static let idleRecheckInterval: TimeInterval = 0.4
+
     /// Called when the hotkey toggles the language.
     var onToggle: (() -> Void)?
 
@@ -20,6 +31,27 @@ final class KeyRouter: KeyboardTapDelegate {
     func reset() {
         session.cursorMoved()
         chord.cancel()
+        focusCheckNeeded = true
+    }
+
+    /// Queries the bundle ID of the focused UI element and updates `focusedOverlayBundleID`
+    /// when a non-activating overlay (e.g. Spotlight) holds keyboard focus over `frontApp`.
+    func refreshFocusedOverlay() {
+        guard state.permissionGranted else { return }
+        let focused = TextContext.focusedBundleID()
+        let overlay: String?
+        if let focused,
+           focused != Bundle.main.bundleIdentifier,
+           focused != state.frontApp?.bundleID {
+            overlay = focused
+        } else {
+            overlay = nil
+        }
+        if overlay != state.focusedOverlayBundleID {
+            state.focusedOverlayBundleID = overlay
+            session.cursorMoved()
+        }
+        focusCheckNeeded = false
     }
 
     func keyboardTap(_ tap: KeyboardTap, shouldPass event: CGEvent, type: CGEventType) -> Bool {
@@ -31,8 +63,9 @@ final class KeyRouter: KeyboardTapDelegate {
                 toggle()
             }
             return true
-        default:  // mouse down: the cursor may have moved
+        default:  // mouse down: the cursor or focused overlay (e.g. Spotlight icon) may have changed
             reset()
+            invalidateFocus(at: ProcessInfo.processInfo.systemUptime)
             return true
         }
     }
@@ -41,17 +74,37 @@ final class KeyRouter: KeyboardTapDelegate {
         chord.cancel()
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let flags = event.flags
+        let now = ProcessInfo.processInfo.systemUptime
 
         if state.hotkey.matchesKeyDown(keyCode: keyCode, flags: flags) {
             toggle()
             return false
         }
-        guard state.isComposing else {
+
+        // Shortcuts (⌘Space, ⌘C, ⌃A, ⌥-letters…) may move the cursor, change the text,
+        // or open/close an overlay like Spotlight.
+        if !flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
+            invalidateFocus(at: now)
             session.cursorMoved()
             return true
         }
-        // Shortcuts (⌘C, ⌃A, ⌥-letters…) may move the cursor or change the text.
-        if !flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
+
+        let isFocusTriggering = KeyCode.focusTriggering.contains(keyCode)
+        if isFocusTriggering {
+            // Escape, Return, Tab, or function/Spotlight keys can open or dismiss overlays.
+            // Schedule a focus refresh after macOS handles this key (do not check prematurely).
+            invalidateFocus(at: now)
+        } else {
+            if focusCheckNeeded
+                || (session.engine.isEmpty && state.focusedOverlayBundleID == nil)
+                || (now - lastFocusEventTime) < Self.focusGraceWindow
+                || (now - lastKeyTime) >= Self.idleRecheckInterval {
+                refreshFocusedOverlay()
+            }
+            lastKeyTime = now
+        }
+
+        guard state.isComposing else {
             session.cursorMoved()
             return true
         }
@@ -92,6 +145,18 @@ final class KeyRouter: KeyboardTapDelegate {
         return false
     }
 
+    private func invalidateFocus(at now: TimeInterval) {
+        focusCheckNeeded = true
+        lastFocusEventTime = now
+        // Refresh the menu bar badge once Spotlight/overlay finishes animating open or closed.
+        visualRefreshTask?.cancel()
+        visualRefreshTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            self?.refreshFocusedOverlay()
+        }
+    }
+
     private func apply(_ edit: Edit, tap: KeyboardTap) {
         var deletes = edit.deleteCount
         if deletes > 0, state.fixSuggestions {
@@ -125,6 +190,12 @@ private enum KeyCode {
     /// forward delete, Escape, F1–F20.
     static let cursorMoving: Set<Int64> = [
         123, 124, 125, 126, 115, 119, 116, 121, 117, 53,
+        122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79, 80, 90,
+    ]
+    /// Keys that can open or dismiss an overlay panel (Escape, Return, Numpad Enter, Tab,
+    /// Spotlight/Launchpad/Mission Control keys, and F1–F20).
+    static let focusTriggering: Set<Int64> = [
+        36, 48, 53, 76, 130, 131, 160, 177,
         122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79, 80, 90,
     ]
 }

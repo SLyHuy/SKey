@@ -38,6 +38,7 @@ final class AppController {
     func start() {
         frontAppMonitor = FrontAppMonitor { [weak self] app in
             self?.state.frontApp = app
+            self?.state.focusedOverlayBundleID = nil
             self?.router.reset()
             self?.updateSecureInput()
         }
@@ -52,6 +53,7 @@ final class AppController {
                 self.checkPermission()
                 self.updateInputSource()  // safety net if a change notification is missed
                 self.updateSecureInput()
+                self.router.refreshFocusedOverlay()
                 if self.onboardingWindow?.isVisible == true { self.refreshTips() }
             }
         }
