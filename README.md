@@ -8,6 +8,12 @@ Bộ gõ **Telex** tối giản cho macOS. Làm đúng một việc: gõ tiếng
 
 ## Cài đặt (người dùng)
 
+### Bằng Homebrew
+```bash
+brew install --cask SLyHuy/tap/skey
+```
+
+### Tải trực tiếp
 SKey được phát hành **không kèm chứng chỉ Apple** (chữ ký ad-hoc), nên lần đầu cần vài bước:
 
 1. Tải `SKey-x.y.z.dmg` (hoặc bản `.zip`) tại [trang Releases](https://github.com/SLyHuy/SKey/releases/latest). Muốn kiểm tra file thì chạy `shasum -a 256 SKey-x.y.z.dmg` và so với file `SKey-x.y.z.sha256`.
@@ -97,6 +103,7 @@ Bản dev dùng bundle id `com.huyly.skey.dev` (tên **SKey Dev**), tách biệt
 **Phát hành:** bản chính thức do GitHub Actions build, không build trên máy cá nhân, và **số phiên bản lấy từ tag git** (không ghi trong `project.yml`).
 1. Vào **Actions → Release → Run workflow** (nhánh `master`), chọn phần cần nâng theo [Semantic Versioning](https://semver.org): `patch` (0.1.2 → 0.1.3, sửa lỗi), `minor` (0.1.2 → 0.2.0, tính năng mới), `major` (0.1.2 → 1.0.0, thay đổi lớn).
 2. Workflow **Release** (`.github/workflows/release.yml`) tính số phiên bản mới từ tag gần nhất, chạy `scripts/release.sh` trên máy macOS của GitHub (test, build universal arm64 + x86_64, ký ad-hoc, DMG, zip, checksum), **chứng thực nguồn gốc** (build attestation), rồi tạo tag và GitHub Release với nội dung từ `.github/release-notes.md`.
+3. Sau khi release xong, chạy `make homebrew` trên máy để đồng bộ `SLyHuy/homebrew-tap` với bản phát hành mới nhất.
 
 Hoặc từ dòng lệnh:
 ```bash
