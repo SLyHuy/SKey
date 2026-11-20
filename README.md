@@ -35,7 +35,7 @@ Với bản ký ad-hoc, macOS coi mỗi bản build là một app khác nên **q
 |---|---|
 | Chuyển Vi/En | Phím tắt (mặc định ⌥ Space), hoặc menu **Gõ tiếng Việt** |
 | Đổi phím tắt | Menu → **Phím tắt chuyển Vi/En**: ⌥ Space, ⌃ Space, ⌃ ⇧, ⌥ ⇧ |
-| Luôn tiếng Anh trong một app | Mở app đó, rồi menu → **Luôn tiếng Anh trong <App>**. Mặc định đã có các terminal |
+| Luôn tiếng Anh trong một app | Mở app đó, rồi menu → **Luôn tiếng Anh trong <App>**. Mặc định đã có Spotlight và các terminal |
 | Kiểu đặt dấu | Menu → **Kiểu đặt dấu**: kiểu cũ (hòa, thúy) hoặc kiểu mới (hoà, thuý) |
 
 ### Quy tắc Telex
@@ -53,7 +53,7 @@ Bộ gõ nhìn thấy mọi phím bạn gõ, nên SKey được thiết kế đ�
 - **Không kết nối mạng.** Không có dòng code mạng nào, bản build không liên kết thư viện mạng. Không tự cập nhật, không thống kê.
 - **Không ghi lại phím gõ.** Không ghi file, không ghi log, không dùng clipboard. Dữ liệu duy nhất lưu trên đĩa là các tuỳ chọn trong menu.
 - **Bộ nhớ tạm tối đa 21 ký tự** (từ đang gõ không tính), chỉ nằm trong RAM, để sửa dấu bằng ⌫. Bị xoá ngay khi bạn click chuột, bấm phím mũi tên, dùng phím tắt hoặc chuyển app.
-- **Đọc tối đa 14 ký tự trước con trỏ** qua Accessibility, chỉ một lần, sau khi bạn di chuyển con trỏ và gõ một phím dấu. Không đọc gì sau con trỏ ngoài việc kiểm tra ký tự liền sau có phải chữ cái hay không. Tắt được trong menu → Tuỳ chọn.
+- **Đọc tối đa 14 ký tự trước con trỏ** qua Accessibility, chỉ một lần, sau khi bạn di chuyển con trỏ và gõ một phím dấu. Không đọc gì sau con trỏ ngoài việc kiểm tra ký tự liền sau có phải chữ cái hay không. Tắt được trong menu → Tuỳ chọn. Ngoài ra, SKey chỉ đọc bundle ID của cửa sổ đang nhận focus (không đọc chữ) để nhận diện các khung nổi như Spotlight.
 - **Ô mật khẩu:** khi bạn gõ mật khẩu, macOS bật chế độ nhập an toàn (Secure Input) và không chuyển phím tới SKey, nên SKey không thấy phím và không đọc ô đó.
 - **Quyền cần có:** chỉ Accessibility (để nhận phím và gửi chữ có dấu). App không xin thêm entitlement nào. Nút "Làm mới quyền" chạy `tccutil reset Accessibility com.huyly.skey`, chỉ xoá quyền của chính SKey.
 - **Mã nguồn mở, không phụ thuộc thư viện ngoài:** mọi thứ SKey làm đều nằm trong repo này để bạn kiểm tra.

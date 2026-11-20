@@ -42,6 +42,9 @@ final class AppState {
     var permissionGranted = false
     /// The last app the user typed in (never SKey itself).
     var frontApp: AppInfo?
+    /// Bundle ID of a non-activating overlay (e.g. Spotlight) that currently holds keyboard
+    /// focus while `frontApp` remains active behind it.
+    var focusedOverlayBundleID: String?
     /// Name of a non-layout input source (Apple Vietnamese, Japanese IME…) that is active.
     /// SKey stays out of the way while one is selected.
     var activeInputMethod: String?
@@ -53,8 +56,16 @@ final class AppState {
     var systemTips: [SystemTip] = []
 
     var frontAppIsEnglishOnly: Bool {
+        if let overlay = focusedOverlayBundleID {
+            return englishApps.contains(overlay)
+        }
         guard let frontApp else { return false }
         return englishApps.contains(frontApp.bundleID)
+    }
+
+    var spotlightIsEnglishOnly: Bool {
+        get { englishApps.contains(Self.spotlightBundleID) }
+        set { setEnglishOnly(Self.spotlightBundleID, newValue) }
     }
 
     /// What the menu bar icon shows.
@@ -63,7 +74,10 @@ final class AppState {
     /// Whether keys should go through the Telex engine right now.
     var isComposing: Bool { showsVietnamese && activeInputMethod == nil && !isSecureInputActive }
 
+    static let spotlightBundleID = "com.apple.Spotlight"
+
     static let defaultEnglishApps = [
+        spotlightBundleID,
         "com.apple.Terminal",
         "com.googlecode.iterm2",
         "dev.warp.Warp-Stable",
@@ -90,6 +104,15 @@ final class AppState {
         fixSuggestions = defaults.bool(forKey: Keys.fixSuggestions)
         editPreviousWords = defaults.bool(forKey: Keys.editPreviousWords)
         englishApps = defaults.stringArray(forKey: Keys.englishApps) ?? Self.defaultEnglishApps
+
+        // Existing installs already persisted `englishApps` before Spotlight was added to the
+        // defaults; add it once without overriding a user who later disables it.
+        if !defaults.bool(forKey: Keys.spotlightDefaultAdded) {
+            if !englishApps.contains(Self.spotlightBundleID) {
+                englishApps.insert(Self.spotlightBundleID, at: 0)
+            }
+            defaults.set(true, forKey: Keys.spotlightDefaultAdded)
+        }
     }
 
     func setEnglishOnly(_ bundleID: String, _ on: Bool) {
@@ -108,5 +131,6 @@ final class AppState {
         static let fixSuggestions = "fixSuggestions"
         static let editPreviousWords = "editPreviousWords"
         static let englishApps = "englishApps"
+        static let spotlightDefaultAdded = "spotlightDefaultAdded"
     }
 }

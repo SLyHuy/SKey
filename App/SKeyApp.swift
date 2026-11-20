@@ -64,7 +64,12 @@ private struct MenuContent: View {
             ))
         }
         Menu("App luôn dùng tiếng Anh") {
-            let apps = controller.installedEnglishApps()
+            Toggle("Spotlight", isOn: Binding(
+                get: { state.spotlightIsEnglishOnly },
+                set: { state.spotlightIsEnglishOnly = $0 }
+            ))
+            Divider()
+            let apps = controller.installedEnglishApps().filter { $0.bundleID != AppState.spotlightBundleID }
             ForEach(apps, id: \.bundleID) { app in
                 Button("Bỏ \(app.name)") { state.setEnglishOnly(app.bundleID, false) }
             }
@@ -72,7 +77,7 @@ private struct MenuContent: View {
                 Text("Chưa có app nào")
             }
             Divider()
-            Button("Khôi phục mặc định (các terminal)") { state.englishApps = AppState.defaultEnglishApps }
+            Button("Khôi phục mặc định (Spotlight & terminal)") { state.englishApps = AppState.defaultEnglishApps }
         }
 
         Menu("Tuỳ chọn") {
